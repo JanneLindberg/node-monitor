@@ -101,6 +101,7 @@
 (defroutes my-routes
   (GET "/nodes" [] (json-response @node-info))
   (GET "/nodes/" [] (json-response @node-info))
+  (GET "/config" [] (json-response @config))
 
   (GET "/nodes/offline/" [] (json-response (filter #(false? (:active (nth % 1))) @node-info)))
 
