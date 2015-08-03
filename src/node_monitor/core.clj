@@ -32,6 +32,13 @@
    }))
 
 
+
+(defn entry-name
+  "Get the name of the entry or if undefined return the ip address"
+  [entry]
+  (or (:name entry) (:ip entry)))
+
+
 (defn- now
   "Get the current time in nano seconds"
   []
@@ -53,6 +60,9 @@
             :reponse-time total
             :active result
             }
+           (when-let [name (:name entry)]
+             {:name name}
+             )
            (when (true? result)
              {:response-ts (System/currentTimeMillis)}
              )
@@ -61,7 +71,7 @@
 
 (defn- check-node [entry]
   (future
-    (swap! node-info update-in [(:ip entry)]
+    (swap! node-info update-in [(entry-name entry)]
            merge (check-node-with-ping entry (:timeout @config)))
     ))
 
