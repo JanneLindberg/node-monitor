@@ -12,5 +12,17 @@
 
     (is (= nil (entry-name {:xname "aname" :xip "10.11.12.1"})))
 
-))
+    ))
 
+
+
+(deftest json-response-test
+  (testing "Testing json-response handler"
+
+    (is (= 200 (:status (json-response {:a "aa" :b "bb"}))))
+
+    (is (= 400 (:status (json-response 400 {:a "aa" :b "bb"}))))
+
+    ))
+
+(json-response-test)

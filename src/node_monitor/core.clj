@@ -84,27 +84,23 @@
               (Thread/sleep (:interval @config))
               ))))
 
-(defn- json-response
-  [data]
-  { :status 200
-    :headers {"Content-Type" "application/json"}
-    :body (str (json/write-str data))
-   })
+(defn json-response
+  ([^String data]
+   (json-response 200 data)
+   )
 
-
-(defn- json-response-four-o-four
-  "Wrap an data object in a"
-  [data]
-  { :status 404
-    :headers {"Content-Type" "application/json"}
-    :body (str (json/write-str data))
-   })
+  ([^Integer code ^String data]
+   { :status code
+     :headers {"Content-Type" "application/json"}
+     :body (str (json/write-str data))
+     })
+)
 
 
 (defn- get-node-info [id]
   (if-let [resp (@node-info id)]
     (json-response resp)
-    (json-response-four-o-four (str "Node:" id " not found"))
+    (json-response 404 (str "Node:" id " not found"))
 ))
 
 
@@ -113,7 +109,8 @@
   (GET "/nodes/" [] (json-response @node-info))
   (GET "/config" [] (json-response @config))
 
-  (GET "/nodes/offline/" [] (json-response (filter #(false? (:active (nth % 1))) @node-info)))
+  (GET "/nodes/offline/" [] (json-response
+                             (flatten (filter #(false? (:active (nth % 1))) @node-info))))
 
   (context "/nodes/:id" [id]
            (GET "/" [] (get-node-info id))
