@@ -8,7 +8,7 @@ agent is impractical or impossible due to hardware limitations, for example on d
 
 There is currently no support for monitoring any service running on a node.
 
-## Building
+## Build
 
 ```sh
 git clone https://github.com/JanneLindberg/node-monitor.git
@@ -29,15 +29,24 @@ java -jar ./target/node-monitor-0.1.0-SNAPSHOT-standalone.jar
 ## REST API
 The service provides a simple REST API to publish the status
 
-### List node status
+### Show node status
 ```sh
 http://localhost:<PORT>/nodes/
+
+http://localhost:<PORT>/nodes/<nodeid>
+
 ```
 
-### List offline nodes
+### Show offline nodes
 ```sh
 http://localhost:<PORT>/nodes/offline/
 ```
+
+### Show configuration
+```sh
+http://localhost:<PORT>/config
+```
+
 
 ### Contributors
 
