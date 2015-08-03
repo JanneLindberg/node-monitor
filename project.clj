@@ -5,9 +5,6 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [http-kit "2.1.16"]
-
-;;                 [ring/ring-jetty-adapter "1.3.1"]
-
                  [org.clojure/data.json "0.2.5"]
                  [ring "1.4.0"]
                  [compojure "1.4.0"]
