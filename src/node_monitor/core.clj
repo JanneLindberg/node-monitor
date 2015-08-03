@@ -1,4 +1,5 @@
 (ns node-monitor.core
+  (:gen-class)
   (:use
    org.httpkit.server
    ring.middleware.json
