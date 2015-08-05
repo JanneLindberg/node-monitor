@@ -57,14 +57,14 @@
     (merge {
             :host (:ip entry)
             :description (:description entry)
-            :reponse-time total
+            :response_time total
             :active result
             }
            (when-let [name (:name entry)]
              {:name name}
              )
            (when (true? result)
-             {:response-ts (System/currentTimeMillis)}
+             {:response_ts (System/currentTimeMillis)}
              )
            )))
 
@@ -91,7 +91,8 @@
 
   ([^Integer code ^String data]
    { :status code
-     :headers {"Content-Type" "application/json"}
+     :headers {"Content-Type" "application/json; charset=utf-8\r\nAccess-Control-Allow-Origin: *"
+               }
      :body (str (json/write-str data))
      })
 )
