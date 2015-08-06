@@ -10,6 +10,7 @@
    [compojure.route :as route]
    [compojure.handler :as handler]
    [clojure.data.json :as json]
+   [clj-time.local :as l]
    )
 )
 
@@ -64,7 +65,7 @@
              {:name name}
              )
            (when (true? result)
-             {:response_ts (System/currentTimeMillis)}
+             {:response_ts (l/format-local-time (l/local-now) :date-time) }
              )
            )))
 
@@ -91,8 +92,7 @@
 
   ([^Integer code ^String data]
    { :status code
-     :headers {"Content-Type" "application/json; charset=utf-8\r\nAccess-Control-Allow-Origin: *"
-               }
+     :headers {"Content-Type" "application/json; charset=utf-8\r\nAccess-Control-Allow-Origin: *" }
      :body (str (json/write-str data))
      })
 )

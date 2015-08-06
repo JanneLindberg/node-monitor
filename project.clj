@@ -9,7 +9,7 @@
                  [ring "1.4.0"]
                  [compojure "1.4.0"]
                  [ring/ring-json "0.4.0"]
+                 [clj-time "0.10.0"]
                  ]
   :profiles {:uberjar {:main node_monitor.core, :aot :all}}
-
-)
+  )
