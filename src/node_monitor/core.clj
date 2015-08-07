@@ -92,7 +92,8 @@
 
   ([^Integer code ^String data]
    { :status code
-     :headers {"Content-Type" "application/json; charset=utf-8\r\nAccess-Control-Allow-Origin: *" }
+     :headers {"Content-Type" "application/json; charset=utf-8"
+               "Access-Control-Allow-Origin:" "*" }
      :body (str (json/write-str data))
      })
 )
@@ -155,6 +156,6 @@
     (println "Starting server")
     (start-server port)
 
-    (println "Staring node checking")
+    (println "Starting node checking")
     (run-check-nodes)
     ))
