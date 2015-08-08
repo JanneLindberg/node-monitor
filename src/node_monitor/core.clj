@@ -2,13 +2,15 @@
   (:gen-class)
   (:use
    org.httpkit.server
-   ring.middleware.json
    ring.middleware.params
+   [ring.middleware.json :only [wrap-json-body]]
+   [ring.util.response :only [response]]
    )
   (:require
    [compojure.core :refer :all ]
    [compojure.route :as route]
    [compojure.handler :as handler]
+   [ring.middleware.json :refer [wrap-json-response]]
    [clojure.data.json :as json]
    [clj-time.local :as l]
    )
@@ -16,6 +18,7 @@
 
 
 (def default-port 8096)
+
 (def config-file-name "node-monitor.cfg")
 
 (defonce server (atom nil))
@@ -26,18 +29,27 @@
 
 (def config
   ^{:private true}
-  (atom {
-         :interval 30000
-         :timeout 5000
-         :node-list '[]
-   }))
+  (atom {}))
 
+
+(defn init-config []
+  (reset! config {
+                  :interval 30000
+                  :timeout 5000
+                  :node-list '{}
+                  }))
+
+(defn save-config []
+  (spit config-file-name @config))
+
+(defn load-config []
+  (reset! config (read-string (slurp config-file-name))))
 
 
 (defn entry-name
   "Get the name of the entry or if undefined return the ip address"
   [entry]
-  (or (:name entry) (:ip entry)))
+  (or (:name entry) (:host entry)))
 
 
 (defn- now
@@ -49,14 +61,14 @@
 (defn check-node-with-ping
   "Check if a node is available using .isReachable"
   [entry timeout]
-  (let [addr (java.net.InetAddress/getByName (:ip entry))
+  (let [addr (java.net.InetAddress/getByName (:host entry))
         start (now)
         result (.isReachable addr timeout)
         total (/ (double (- (now) start)) 1000000.0)
         ]
 
     (merge {
-            :host (:ip entry)
+            :host (:host entry)
             :description (:description entry)
             :response_time total
             :active result
@@ -81,9 +93,10 @@
   (future (while @check-node-status
             (do
               (doseq [entry (:node-list @config)]
-                (check-node entry))
+                (check-node (second entry)))
               (Thread/sleep (:interval @config))
               ))))
+
 
 (defn json-response
   ([^String data]
@@ -93,7 +106,7 @@
   ([^Integer code ^String data]
    { :status code
      :headers {"Content-Type" "application/json; charset=utf-8"
-               "Access-Control-Allow-Origin:" "*" }
+               "Access-Control-Allow-Origin" "*" }
      :body (str (json/write-str data))
      })
 )
@@ -106,10 +119,48 @@
 ))
 
 
+
+(defn create-or-update-node-entry
+  "Create or update an configuration entry"
+  [entry]
+  (when (map? entry)
+    (let [host (:host entry)]
+      (swap! config update-in [:node-list host] merge entry)
+      (save-config)
+
+      { :status 201
+        :headers {"Content-Type" "application/json; charset=utf-8"
+                  "Access-Control-Allow-Origin" "*" }
+        :body ((:node-list @config) host)
+        }
+      )))
+
+
+(defn remove-node-entry
+  "Remove a configuration and the corresponding status entry"
+  [host]
+  (dosync
+   (when-let [name (entry-name ((:node-list @config) host))]
+     (swap! node-info dissoc name))
+   (swap! config update-in [:node-list] dissoc host))
+  (save-config)
+
+  {
+   :status 204
+   :headers {"Content-Type" "application/json; charset=utf-8"
+             "Access-Control-Allow-Origin" "*" }
+   }
+  )
+
+
+
 (defroutes my-routes
   (GET "/nodes" [] (json-response @node-info))
   (GET "/nodes/" [] (json-response @node-info))
+
   (GET "/config" [] (json-response @config))
+  (POST "/config" {body :body} (create-or-update-node-entry body))
+  (DELETE "/config/:id" [id] (remove-node-entry id))
 
   (GET "/nodes/offline/" [] (json-response
                              (flatten (filter #(false? (:active (nth % 1))) @node-info))))
@@ -121,11 +172,11 @@
 )
 
 
+
 (def handler
   (-> my-routes
-      wrap-params
+      (wrap-json-body {:keywords? true})
       wrap-json-response
-      wrap-json-body
       ))
 
 
@@ -149,8 +200,7 @@
                                  (reset! check-node-status false)
                                  (shutdown-agents)
                                  )))
-
-    (reset! config (read-string (slurp config-file-name)))
+    (load-config)
     (println @config)
 
     (println "Starting server")
