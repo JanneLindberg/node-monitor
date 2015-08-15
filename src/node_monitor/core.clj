@@ -46,12 +46,6 @@
   (reset! config (read-string (slurp config-file-name))))
 
 
-(defn entry-name
-  "Get the name of the entry or if undefined return the ip address"
-  [entry]
-  (or (:name entry) (:host entry)))
-
-
 (defn- now
   "Get the current time in nano seconds"
   []
@@ -84,7 +78,7 @@
 
 (defn- check-node [entry]
   (future
-    (swap! node-info update-in [(entry-name entry)]
+    (swap! node-info update-in [(:host entry)]
            merge (check-node-with-ping entry (:timeout @config)))
     ))
 
@@ -140,7 +134,7 @@
   "Remove a configuration and the corresponding status entry"
   [host]
   (dosync
-   (when-let [name (entry-name ((:node-list @config) host))]
+   (when-let [name (:host ((:node-list @config) host))]
      (swap! node-info dissoc name))
    (swap! config update-in [:node-list] dissoc host))
   (save-config)

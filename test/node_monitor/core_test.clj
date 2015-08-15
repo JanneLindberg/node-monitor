@@ -3,19 +3,6 @@
             [node-monitor.core :refer :all]))
 
 
-(deftest entry-name-test
-  (testing "Test fetching the entry name from an configuration entry"
-    (let [host "10.11.12.1"]
-
-      (is (= "10.11.12.1" (entry-name {:xname "aname" :host host})))
-
-      (is (= "aname" (entry-name {:name "aname" :host host})))
-
-      (is (= nil (entry-name {:xname "aname" :xhost host})))
-
-      )))
-
-
 
 (deftest json-response-test
   (testing "Testing json-response handler"
