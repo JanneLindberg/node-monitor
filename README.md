@@ -20,7 +20,7 @@ The service is started using the following command
 
 ```sh
 export PORT=<portno>
-java -jar ./target/node-monitor-0.1.0-SNAPSHOT-standalone.jar
+java -jar ./target/node-monitor-standalone.jar
 ```
 
 ### Configuration

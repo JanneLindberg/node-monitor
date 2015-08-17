@@ -12,4 +12,6 @@
                  [clj-time "0.10.0"]
                  ]
   :profiles {:uberjar {:main node_monitor.core, :aot :all}}
+
+  :uberjar-name "node-monitor-standalone.jar"
   )
