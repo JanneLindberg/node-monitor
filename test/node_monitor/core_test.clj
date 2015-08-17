@@ -22,21 +22,21 @@
       (testing "Test empty config"
         (init-config)
 
-        (is (empty? (:node-list @config)) "Should been empty")
+        (is (empty? (:nodes @config)) "Should been empty")
 
-        (is (= nil ((:node-list @config) host)) "Expected no entry ")
+        (is (= nil ((:nodes @config) host)) "Expected no entry ")
         )
 
       (testing "Create and remove host entry"
         (create-or-update-node-entry test-entry)
 
-        (is (not= nil ((:node-list @config) host)) "Expected to find an entry")
+        (is (not= nil ((:nodes @config) host)) "Expected to find an entry")
 
         (remove-node-entry host)
 
-        (is (= nil ((:node-list @config) host)) "Expected no entry ")
+        (is (= nil ((:nodes @config) host)) "Expected no entry ")
 
-        (is (empty? (:node-list @config)) "Should been empty")
+        (is (empty? (:nodes @config)) "Should been empty")
 
         )
       )

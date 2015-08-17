@@ -43,7 +43,7 @@
   (reset! config {
                   :interval 30000
                   :timeout 5000
-                  :node-list '{}
+                  :nodes '{}
                   }))
 
 (defn save-config []
@@ -120,7 +120,7 @@
   []
   (future (while @check-node-status
             (do
-              (doseq [entry (:node-list @config)]
+              (doseq [entry (:nodes @config)]
                 (check-node (second entry)))
               (Thread/sleep (:interval @config))
               ))))
@@ -153,13 +153,13 @@
   [entry]
   (when (map? entry)
     (let [host (:host entry)]
-      (swap! config update-in [:node-list host] merge entry)
+      (swap! config update-in [:nodes host] merge entry)
       (save-config)
 
       { :status 201
         :headers {"Content-Type" "application/json; charset=utf-8"
                   "Access-Control-Allow-Origin" "*" }
-        :body ((:node-list @config) host)
+        :body ((:nodes @config) host)
         }
       )))
 
@@ -168,9 +168,9 @@
   "Remove a configuration and the corresponding status entry"
   [host]
   (dosync
-   (when-let [name (:host ((:node-list @config) host))]
+   (when-let [name (:host ((:nodes @config) host))]
      (swap! node-info dissoc name))
-   (swap! config update-in [:node-list] dissoc host))
+   (swap! config update-in [:nodes] dissoc host))
   (save-config)
 
   {
