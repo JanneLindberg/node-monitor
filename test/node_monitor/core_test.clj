@@ -42,3 +42,25 @@
       )
     )
   )
+
+
+(deftest test-node-status-change
+
+  (testing "Test config"
+
+    (let [host "1.2.3.4"
+          t1 {:host host :active true }
+          t2 {:host host :active false }]
+
+      (is (empty? ((get-lost-nodes) host)))
+
+      (node-status-changed t2)
+
+      (is (not (empty? ((get-lost-nodes) host))))
+
+      (node-status-changed t1)
+
+      (is (empty? ((get-lost-nodes) host)))
+
+)))
+

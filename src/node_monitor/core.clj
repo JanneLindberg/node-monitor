@@ -27,6 +27,13 @@
 
 (def ^{:private true} node-info (atom {}))
 
+(def ^{:private true
+       :doc "Keep track of lost nodes togheter with the time it was last available"}
+  lost-nodes (atom {}))
+
+(defn get-lost-nodes []
+  @lost-nodes)
+
 (def config
   ^{:private true}
   (atom {}))
@@ -71,19 +78,46 @@
              {:name name}
              )
            (when (true? result)
-             {:response_ts (l/format-local-time (l/local-now) :date-time) }
+             {:update_time (l/format-local-time (l/local-now) :date-time) }
              )
            )))
 
 
-(defn- check-node [entry]
+(defn lost-node-entry
+  "Build an entry to keep for a lost node"
+  [entry]
+  {
+   :host (:host entry)
+   :node_lost_time (l/format-local-time (l/local-now) :date-time)
+   }
+)
+
+
+(defn node-status-changed [entry]
+   (if (false? (:active entry))
+     (swap! lost-nodes assoc-in [(:host entry)]  (lost-node-entry entry))
+     (swap! lost-nodes dissoc (:host entry))
+))
+
+
+(defn- check-node
+  [entry]
   (future
-    (swap! node-info update-in [(:host entry)]
-           merge (check-node-with-ping entry (:timeout @config)))
+    (let [host (:host entry)
+          updated (check-node-with-ping entry (:timeout @config))]
+
+      (when (not= (:active (@node-info host )) (:active updated))
+        (node-status-changed updated)
+        )
+      (swap! node-info update-in [(:host entry)] merge updated)
+      )
     ))
 
 
-(defn run-check-nodes []
+
+(defn run-check-nodes
+  "Run thru all the configurated nodes at the specified intervall"
+  []
   (future (while @check-node-status
             (do
               (doseq [entry (:node-list @config)]
@@ -158,6 +192,8 @@
 
   (GET "/nodes/offline/" [] (json-response
                              (flatten (filter #(false? (:active (nth % 1))) @node-info))))
+
+  (GET "/nodes/lost/" [] (json-response (get-lost-nodes)))
 
   (context "/nodes/:id" [id]
            (GET "/" [] (get-node-info id))
