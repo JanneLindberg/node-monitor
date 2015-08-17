@@ -46,11 +46,11 @@
                   :nodes '{}
                   }))
 
-(defn save-config []
-  (spit config-file-name @config))
+(defn save-config [file-name]
+  (spit file-name @config))
 
-(defn load-config []
-  (reset! config (read-string (slurp config-file-name))))
+(defn load-config [file-name]
+  (reset! config (read-string (slurp file-name))))
 
 
 (defn- now
@@ -154,7 +154,7 @@
   (when (map? entry)
     (let [host (:host entry)]
       (swap! config update-in [:nodes host] merge entry)
-      (save-config)
+      (save-config config-file-name)
 
       { :status 201
         :headers {"Content-Type" "application/json; charset=utf-8"
@@ -171,7 +171,7 @@
    (when-let [name (:host ((:nodes @config) host))]
      (swap! node-info dissoc name))
    (swap! config update-in [:nodes] dissoc host))
-  (save-config)
+  (save-config config-file-name)
 
   {
    :status 204
@@ -230,7 +230,7 @@
                                  (reset! check-node-status false)
                                  (shutdown-agents)
                                  )))
-    (load-config)
+    (load-config config-file-name)
     (println @config)
 
     (println "Starting server")
