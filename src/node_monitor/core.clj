@@ -157,11 +157,11 @@
   [host]
   (dosync
    (when-let [name (:host ((:nodes @config) host))]
-     (swap! node-info dissoc name))
+     (swap! node-info dissoc name)
+     (swap! lost-nodes dissoc name))
    (swap! config update-in [:nodes] dissoc host))
   (save-config config-file-name)
   (json-response 204))
-
 
 
 (defn node-status
