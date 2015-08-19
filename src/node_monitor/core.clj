@@ -177,8 +177,20 @@
 )
 
 
+(defn grand-total
+  "The grand total of everything"
+  []
+  {:node_monitor
+   (merge
+    {:status (node-status) }
+    {:nodes @node-info }
+    {:lost_nodes (get-lost-nodes)}
+    {:config @config}
+    )})
+
 
 (defroutes my-routes
+  (GET "/" [] (json-response 200 (grand-total)))
 
   (GET "/nodes" [] (json-response 200 @node-info))
   (GET "/nodes/" [] (json-response 200 @node-info))
