@@ -86,18 +86,15 @@
 (defn lost-node-entry
   "Build an entry to keep for a lost node"
   [entry]
-  {
-   :host (:host entry)
+  {:host (:host entry)
    :node_lost_time (l/format-local-time (l/local-now) :date-time)
-   }
-)
+   })
 
 
 (defn node-status-changed [entry]
    (if (false? (:active entry))
      (swap! lost-nodes assoc-in [(:host entry)]  (lost-node-entry entry))
-     (swap! lost-nodes dissoc (:host entry))
-))
+     (swap! lost-nodes dissoc (:host entry))))
 
 
 (defn- check-node
@@ -110,9 +107,7 @@
         (node-status-changed updated)
         )
       (swap! node-info update-in [(:host entry)] merge updated)
-      )
-    ))
-
+      )))
 
 
 (defn run-check-nodes
@@ -127,25 +122,24 @@
 
 
 (defn json-response
-  ([^String data]
-   (json-response 200 data)
-   )
+  ([^Integer code]
+   (json-response code nil))
 
   ([^Integer code ^String data]
-   { :status code
-     :headers {"Content-Type" "application/json; charset=utf-8"
-               "Access-Control-Allow-Origin" "*" }
-     :body (str (json/write-str data))
-     })
-)
+   (merge
+    { :status code
+      :headers {"Content-Type" "application/json; charset=utf-8"
+                "Access-Control-Allow-Origin" "*" }
+     }
+    (when-let [d data]
+      { :body (str (json/write-str data))})
+    )))
 
 
 (defn- get-node-info [id]
   (if-let [resp (@node-info id)]
-    (json-response resp)
-    (json-response 404 (str "Node:" id " not found"))
-))
-
+    (json-response 200 resp)
+    (json-response 404 (str "Node:" id " not found"))))
 
 
 (defn create-or-update-node-entry
@@ -155,13 +149,7 @@
     (let [host (:host entry)]
       (swap! config update-in [:nodes host] merge entry)
       (save-config config-file-name)
-
-      { :status 201
-        :headers {"Content-Type" "application/json; charset=utf-8"
-                  "Access-Control-Allow-Origin" "*" }
-        :body ((:nodes @config) host)
-        }
-      )))
+      (json-response 201 ((:nodes @config) host)))))
 
 
 (defn remove-node-entry
@@ -172,28 +160,21 @@
      (swap! node-info dissoc name))
    (swap! config update-in [:nodes] dissoc host))
   (save-config config-file-name)
-
-  {
-   :status 204
-   :headers {"Content-Type" "application/json; charset=utf-8"
-             "Access-Control-Allow-Origin" "*" }
-   }
-  )
-
+  (json-response 204))
 
 
 (defroutes my-routes
-  (GET "/nodes" [] (json-response @node-info))
-  (GET "/nodes/" [] (json-response @node-info))
+  (GET "/nodes" [] (json-response 200 @node-info))
+  (GET "/nodes/" [] (json-response 200 @node-info))
 
-  (GET "/config" [] (json-response @config))
+  (GET "/config" [] (json-response 200 @config))
   (POST "/config" {body :body} (create-or-update-node-entry body))
   (DELETE "/config/:id" [id] (remove-node-entry id))
 
-  (GET "/nodes/offline/" [] (json-response
+  (GET "/nodes/offline/" [] (json-response 200
                              (flatten (filter #(false? (:active (nth % 1))) @node-info))))
 
-  (GET "/nodes/lost/" [] (json-response (get-lost-nodes)))
+  (GET "/nodes/lost/" [] (json-response 200 (get-lost-nodes)))
 
   (context "/nodes/:id" [id]
            (GET "/" [] (get-node-info id))

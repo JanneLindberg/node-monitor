@@ -7,7 +7,13 @@
 (deftest json-response-test
   (testing "Testing json-response handler"
     (let [entry {:a "aa" :b "bb"} ]
-      (is (= 200 (:status (json-response entry))))
+      (is (= 200 (:status (json-response 200 entry))))
+
+      (is (= 200 (:status (json-response 200))))
+
+      (is (not (empty? (:body (json-response 200 entry)))))
+
+      (is (empty? (:body (json-response 200))))
 
       (is (= 400 (:status (json-response 400 entry))))
 
