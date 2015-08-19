@@ -163,7 +163,23 @@
   (json-response 204))
 
 
+
+(defn node-status
+  "Return a summary of the nodes"
+  []
+  (let [total (count @node-info)
+        lost (count (get-lost-nodes))
+        ]
+    {:active_nodes (- total lost)
+     :lost_nodes lost
+     :configurated_nodes (count (:nodes @config))
+     })
+)
+
+
+
 (defroutes my-routes
+
   (GET "/nodes" [] (json-response 200 @node-info))
   (GET "/nodes/" [] (json-response 200 @node-info))
 
@@ -175,6 +191,7 @@
                              (flatten (filter #(false? (:active (nth % 1))) @node-info))))
 
   (GET "/nodes/lost/" [] (json-response 200 (get-lost-nodes)))
+  (GET "/nodes/status/" [] (json-response 200 (node-status)))
 
   (context "/nodes/:id" [id]
            (GET "/" [] (get-node-info id))
